@@ -16,7 +16,7 @@ use App\Http\Controllers\Operador\OperadorController;
 use App\Http\Controllers\Propietario\PropietarioController;
 
 // =========================================================
-// 2. RUTAS PÚBLICAS (Accesibles sin estar logueado)
+// 2. RUTAS PÚBLICAS
 // =========================================================
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -28,35 +28,38 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // =========================================================
 Route::middleware(['auth'])->group(function () {
 
+    /**
+     * RUTA COMPARTIDA: Esta es la clave. 
+     * Al estar aquí (fuera de admin), Carlos (propietario) puede entrar.
+     */
+    // Busca esta ruta y cámbiala:
+Route::get('/recibo/detalle/{id_cobro}', [LecturaController::class, 'showRecibo'])->name('compartido.recibo');
+
+
     // --- GRUPO ADMINISTRADOR (id_rol = 1) ---
     Route::middleware(['admin'])->prefix('admin')->group(function () {
         
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        
-        // Gestión base
         Route::resource('usuarios', UsuarioController::class)->names('admin.usuarios');
         Route::resource('viviendas', ViviendaController::class)->names('admin.viviendas');
         
-        // Asignaciones y Pagos
         Route::get('/asignaciones', [AsignacionController::class, 'index'])->name('admin.asignaciones.index');
         Route::get('/asignaciones/crear', [AsignacionController::class, 'create'])->name('admin.asignaciones.create');
         Route::post('/asignaciones', [AsignacionController::class, 'store'])->name('admin.asignaciones.store');
         Route::delete('/asignaciones/{usuario}/{vivienda}', [AsignacionController::class, 'destroy'])->name('admin.asignaciones.destroy');
         Route::post('/cobros/pagar/{id}', [AdminController::class, 'registrarPago'])->name('admin.cobros.pagar');
 
-        // Lecturas y Egresos
         Route::resource('lecturas', LecturaController::class)->names('admin.lecturas');
-        Route::get('/lecturas/recibo/{id}', [LecturaController::class, 'showRecibo'])->name('admin.lecturas.recibo');
+        // NOTA: Borré la ruta del recibo de aquí porque ahora está arriba como 'compartido.recibo'
+        
         Route::resource('egresos', EgresoController::class)->names('admin.egresos');
 
-        // Sub-grupo Reportes
         Route::prefix('reportes')->group(function () {
             Route::get('/general', [ReporteController::class, 'index'])->name('admin.reportes.general');
             Route::get('/vivienda', [ReporteController::class, 'porVivienda'])->name('admin.reportes.vivienda');
             Route::get('/morosidad', [ReporteController::class, 'morosidad'])->name('admin.reportes.morosidad');
         });
 
-        // Configuración
         Route::get('/configuracion/tarifas', [TarifaController::class, 'edit'])->name('admin.tarifas.edit');
         Route::post('/configuracion/tarifas', [TarifaController::class, 'update'])->name('admin.tarifas.update');
     });

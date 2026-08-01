@@ -4,7 +4,6 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Historial de Lecturas de Agua</h2>
-        
     </div>
 
     @if(session('success'))
@@ -48,27 +47,34 @@
                                     <i class="fas fa-check-circle"></i> Pagado
                                 </span>
                             @else
-                                {{-- Si no está pagado, mostramos un botón que al pulsarlo registre el pago --}}
-                                <form action="{{ route('admin.cobros.pagar', $cobro->id_cobro ?? 0) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger shadow-sm" 
-                                            onclick="return confirm('¿Confirmar pago de esta lectura?')">
-                                        Sin Cancelar
-                                    </button>
-                                </form>
+                                {{-- Si el cobro existe pero no está pagado --}}
+                                @if($cobro)
+                                    <form action="{{ route('admin.cobros.pagar', $cobro->id_cobro) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm" 
+                                                onclick="return confirm('¿Confirmar pago de esta lectura?')">
+                                            Sin Cancelar
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-muted small">Sin cobro generado</span>
+                                @endif
                             @endif
                         </td>
 
                         <td class="text-center">
-                            <!-- BOTÓN VER RECIBO -->
-                            <a href="{{ route('admin.lecturas.recibo', $l->id_lectura) }}" class="btn btn-sm btn-outline-primary">
-                                Ver Recibo
-                            </a>
+                            <!-- BOTÓN VER RECIBO (CORREGIDO PARA USAR ID_COBRO) -->
+                            @if($cobro)
+                                <a href="{{ route('compartido.recibo', $cobro->id_cobro) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Ver Recibo
+                                </a>
+                            @else
+                                <button class="btn btn-sm btn-light disabled">N/A</button>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
-
             </table>
         </div>
     </div>

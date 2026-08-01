@@ -1,4 +1,5 @@
-@extends('layouts.admin')
+{{-- Detectamos el rol del usuario para poner el menú que corresponde --}}
+@extends(Auth::user()->id_rol == 1 ? 'layouts.admin' : 'layouts.propietario')
 
 @section('content')
 <div class="container d-flex flex-column align-items-center mt-3">
@@ -75,9 +76,8 @@
                 <td>MORA 2 %</td>
                 <td class="text-end px-2">Bs {{ number_format($mora ?? 0, 2) }}</td>
             </tr>
-<!-- ... filas anteriores de mora, alcantarillado ... -->
 
-            {{-- LÓGICA DINÁMICA DE WALLY --}}
+            {{-- FILA DINÁMICA DE WALLY --}}
             @if($monto_wally > 0)
             <tr>
                 <td class="label-bold">WALLY</td>
@@ -85,10 +85,18 @@
             </tr>
             @endif
 
+            {{-- FILA DINÁMICA DE SALÓN DE EVENTOS --}}
+            @if($monto_salon > 0)
+            <tr>
+                <td class="label-bold">SALÓN DE EVENTOS</td>
+                <td class="text-end px-2">Bs {{ number_format($monto_salon, 2) }}</td>
+            </tr>
+            @endif
+
             <!-- Total -->
             <tr class="total-row">
                 <td class="label-bold">TOTAL A PAGAR</td>
-                <td class="text-end px-2 fw-bold fs-5">Bs {{ number_format($total, 0) }}</td>
+                <td class="text-end px-2 fw-bold fs-5">Bs {{ number_format($total, 2) }}</td>
             </tr>
         </table>
     </div>
@@ -96,7 +104,11 @@
     <!-- Botones fuera del recuadro para que no se impriman -->
     <div class="mt-4 no-print">
         <button onclick="window.print()" class="btn btn-primary btn-lg px-4">Imprimir Aviso</button>
-        <a href="{{ route('admin.lecturas.index') }}" class="btn btn-secondary btn-lg px-4">Cerrar</a>
+        <!-- Busca el botón Cerrar y ponlo así -->
+        <a href="{{ Auth::user()->id_rol == 1 ? route('admin.lecturas.index') : route('propietario.avisos') }}" 
+        class="btn btn-secondary btn-lg px-4 no-print">
+        Cerrar
+        </a>
     </div>
 </div>
 

@@ -21,41 +21,44 @@ class LecturaController extends Controller
         $viviendas = Vivienda::where('estado_vivienda', true)->get();
         return view('admin.lecturas.create', compact('viviendas'));
     }
-    public function showRecibo($id)
-    {
-        // 1. Cargar datos
-        $lectura = \App\Models\Lectura::with(['vivienda.propietarios'])->findOrFail($id);
-        $propietario = $lectura->vivienda->propietarios->first();
-        $tarifas = \DB::table('tarifas')->latest('id_tarifa')->first();
+public function showRecibo($id_cobro) // Ahora recibe el ID del COBRO
+{
+    // 1. Buscamos el COBRO exacto que el usuario presionó
+    $cobroOficial = \App\Models\Cobro::findOrFail($id_cobro);
 
-        // 2. Definir lecturas (ESTO ES LO QUE TE DABA ERROR)
-        $lect_ant = $lectura->lectura_anterior; 
-        $lect_act = $lectura->lectura_actual;   
+    // 2. Buscamos la LECTURA que corresponde a esa vivienda y ese mismo periodo
+    $lectura = \App\Models\Lectura::with(['vivienda.propietarios'])
+        ->where('id_vivienda', $cobroOficial->id_vivienda)
+        ->whereMonth('fecha_lectura', $cobroOficial->periodo_mes)
+        ->whereYear('fecha_lectura', $cobroOficial->periodo_anio)
+        ->firstOrFail();
 
-        // 3. Buscar Wally Dinámico
-        $mes = date('m', strtotime($lectura->fecha_lectura));
-        $anio = date('Y', strtotime($lectura->fecha_lectura));
+    $propietario = $lectura->vivienda->propietarios->first();
 
-        $monto_wally = \DB::table('reservas')
-            ->join('areas_recreativas', 'reservas.id_area', '=', 'areas_recreativas.id_area')
-            ->where('reservas.id_usuario', $propietario->id_usuario ?? 0) 
-            ->whereMonth('reservas.fecha_reserva', $mes)
-            ->whereYear('reservas.fecha_reserva', $anio)
-            ->where('areas_recreativas.nombre_area', 'Wally')
-            ->sum('reservas.costo_pactado');
-
-        // 4. Cálculos finales
-        $consumo_m3 = $lect_act - $lect_ant;
-        $monto_consumo = $consumo_m3 * ($tarifas->precio_por_m3_agua ?? 5);
-        $alcantarillado = $tarifas->monto_alcantarillado ?? 10;
-        $mora = 0.00;
-        $total = $monto_consumo + $alcantarillado + $mora + $monto_wally;
-
-        // 5. ENVIAR TODO A LA VISTA (Asegúrate de que lect_ant y lect_act estén aquí)
-        return view('admin.lecturas.recibo', compact(
-            'lectura', 'propietario', 'lect_ant', 'lect_act', 
-            'consumo_m3', 'monto_consumo', 'alcantarillado', 
-            'monto_wally', 'mora', 'total'
-        ));
+    // 3. ASIGNAMOS LOS VALORES DEL COBRO (Sin recalcular nada)
+    $monto_consumo  = $cobroOficial->monto_agua;
+    $alcantarillado = $cobroOficial->monto_alcantarillado;
+    $mora           = $cobroOficial->monto_multa;
+    $monto_wally    = $cobroOficial->monto_reservas; // El cobro ya sabe cuánto de reservas tiene
+    
+    // Si quieres separar Wally de Salón, podrías usar una lógica extra, 
+    // pero por ahora usemos el monto_reservas que ya está en el cobro.
+    $monto_salon    = 0; 
+    if($monto_wally > 100) { // Un ejemplo: si es mucho, asumimos que es salón
+        $monto_salon = $monto_wally;
+        $monto_wally = 0;
     }
+
+    $total = $cobroOficial->total_pagar;
+
+    $lect_ant = $lectura->lectura_anterior;
+    $lect_act = $lectura->lectura_actual;
+    $consumo_m3 = $lect_act - $lect_ant;
+
+    return view('admin.lecturas.recibo', compact(
+        'lectura', 'propietario', 'lect_ant', 'lect_act', 
+        'consumo_m3', 'monto_consumo', 'alcantarillado', 
+        'mora', 'monto_wally', 'monto_salon', 'total'
+    ));
+}
 }
