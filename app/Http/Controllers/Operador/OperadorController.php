@@ -18,12 +18,13 @@ class OperadorController extends Controller
     }
 
     /**
-     * Muestra el formulario de captura con la lectura anterior precargada
+     * Muestra el formulario con la lectura anterior para evitar errores del medidor
      */
     public function nuevaLectura() {
         $viviendas = Vivienda::where('estado_vivienda', true)->get();
         
         foreach($viviendas as $v) {
+            // Buscamos la última lectura grabada para que el operador la vea como referencia
             $ultima = Lectura::where('id_vivienda', $v->id_vivienda)->latest('id_lectura')->first();
             $v->ultima_lectura = $ultima ? $ultima->lectura_actual : 0;
         }
@@ -32,49 +33,47 @@ class OperadorController extends Controller
     }
 
     /**
-     * MÉTODO CON TRANSACCIÓN (ACID)
+     * MÉTODO CON TRANSACCIÓN: Registra consumo y genera deuda con MORA automática
      */
     public function guardarLectura(Request $request) {
         $request->validate([
             'id_vivienda' => 'required|exists:viviendas,id_vivienda',
-            'lectura_actual' => 'required|numeric'
+            'lectura_actual' => 'required|numeric' // Acepta decimales
         ]);
 
-        // 1. INICIAR TRANSACCIÓN
+        // 1. INICIAR TRANSACCIÓN (Seguridad total de datos)
         DB::beginTransaction();
 
         try {
-            // A. Obtener última lectura para calcular el consumo
+            // A. Cálculo de consumo con decimales
             $ultimaLectura = Lectura::where('id_vivienda', $request->id_vivienda)
                                     ->orderBy('id_lectura', 'desc')->first();
             
             $lecturaAnterior = $ultimaLectura ? $ultimaLectura->lectura_actual : 0;
             $consumoM3 = $request->lectura_actual - $lecturaAnterior;
 
-            // Validación de integridad
             if ($consumoM3 < 0) {
-                throw new \Exception("La lectura actual no puede ser menor a la anterior ($lecturaAnterior).");
+                throw new \Exception("La lectura actual (" . number_format($request->lectura_actual, 2) . ") no puede ser menor a la anterior (" . number_format($lecturaAnterior, 2) . ").");
             }
 
-            // B. Obtener las tarifas vigentes
+            // B. Obtener tarifas vigentes
             $tarifa = Tarifa::latest('id_tarifa')->first();
             if (!$tarifa) {
                 throw new \Exception("No hay tarifas configuradas en el sistema.");
             }
 
-            // C. GUARDAR LECTURA
-            Lectura::create([
-                'id_vivienda' => $request->id_vivienda,
-                'id_operador' => Auth::id() ?? 1, 
-                'fecha_lectura' => now(),
-                'lectura_anterior' => $lecturaAnterior,
-                'lectura_actual' => $request->lectura_actual,
-            ]);
+            // C. LÓGICA DE MORA AUTOMÁTICA
+            // Contamos si tiene cobros 'Pendientes' de meses anteriores
+            $tieneDeudaPendiente = Cobro::where('id_vivienda', $request->id_vivienda)
+                                        ->where('estado_pago', 'Pendiente')
+                                        ->exists();
 
-            // D. CÁLCULO DE COBRO DINÁMICO
+            // D. CÁLCULO DE MONTOS
             $montoAgua = $consumoM3 * $tarifa->precio_por_m3_agua;
+            $montoMantenimiento = $tarifa->monto_fijo_mantenimiento;
+            $montoAlcantarillado = $tarifa->monto_alcantarillado;
             
-            // Buscar reservas de Wally/Salón (id_rol 3 es Propietario)
+            // Sumar reservas de Wally/Salón del dueño de esta casa (Mes actual)
             $montoReservas = DB::table('reservas')
                 ->whereIn('id_usuario', function($query) use ($request) {
                     $query->select('id_usuario')->from('propietario_vivienda')
@@ -84,72 +83,86 @@ class OperadorController extends Controller
                 ->where('estado_pago', 'Pendiente')
                 ->sum('costo_pactado');
 
-            $totalPagar = $montoAgua + $tarifa->monto_fijo_mantenimiento + $tarifa->monto_alcantarillado + $montoReservas;
+            // Calcular Subtotal antes de la mora
+            $subtotal = $montoAgua + $montoMantenimiento + $montoAlcantarillado + $montoReservas;
 
-            // E. GENERAR COBRO
+            // Aplicar mora del 2% (u otro %) definido en la tabla tarifas si debe meses anteriores
+            $montoMora = 0;
+            if ($tieneDeudaPendiente) {
+                $montoMora = $subtotal * ($tarifa->porcentaje_mora / 100);
+            }
+
+            $totalPagar = $subtotal + $montoMora;
+
+            // E. GUARDAR LECTURA
+            Lectura::create([
+                'id_vivienda' => $request->id_vivienda,
+                'id_operador' => Auth::id() ?? 1, 
+                'fecha_lectura' => now(),
+                'lectura_anterior' => $lecturaAnterior,
+                'lectura_actual' => $request->lectura_actual,
+            ]);
+
+            // F. GENERAR COBRO OFICIAL
             Cobro::create([
                 'id_vivienda' => $request->id_vivienda,
                 'id_tarifa'   => $tarifa->id_tarifa,
                 'periodo_mes' => now()->month,
                 'periodo_anio'=> now()->year,
                 'monto_agua'  => $montoAgua,
-                'monto_mantenimiento' => $tarifa->monto_fijo_mantenimiento,
-                'monto_alcantarillado'=> $tarifa->monto_alcantarillado,
+                'monto_mantenimiento' => $montoMantenimiento,
+                'monto_alcantarillado'=> $montoAlcantarillado,
+                'monto_multa'         => $montoMora, // Aquí se guarda la mora calculada
                 'monto_reservas'      => $montoReservas,
                 'total_pagar'         => $totalPagar,
                 'estado_pago'         => 'Pendiente',
                 'fecha_emision'       => now()
             ]);
 
-            // 2. CONFIRMAR CAMBIOS
+            // 2. CONFIRMAR CAMBIOS (Commit)
             DB::commit();
 
-            // MENSAJE DE ÉXITO SOLICITADO
             return redirect()->route('operador.lecturas.crear')->with('success', 'Aviso de cobro registrado correctamente.');
 
         } catch (\Exception $e) {
-            // 3. DESHACER TODO (Rollback)
+            // 3. DESHACER TODO SI HAY ERROR (Rollback)
             DB::rollBack();
-
-            // MENSAJE DE ERROR SOLICITADO
             return back()->withErrors(['error' => 'Lectura no registrada: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Reporte de averías técnicas
+     * Muestra el historial de averías
      */
-// Función para mostrar la lista de averías (la que daba error)
-public function listaAverias() 
-{
-    $viviendas = Vivienda::where('estado_vivienda', true)->get();
-    
-    // Obtenemos las averías reportadas uniendo con la tabla viviendas para ver el número de casa
-    $averias = DB::table('reporte_averias')
-        ->join('viviendas', 'reporte_averias.id_vivienda', '=', 'viviendas.id_vivienda')
-        ->select('reporte_averias.*', 'viviendas.nro_casa')
-        ->orderBy('fecha_reporte', 'desc')
-        ->get();
+    public function listaAverias() {
+        $viviendas = Vivienda::where('estado_vivienda', true)->get();
+        
+        $averias = DB::table('reporte_averias')
+            ->join('viviendas', 'reporte_averias.id_vivienda', '=', 'viviendas.id_vivienda')
+            ->select('reporte_averias.*', 'viviendas.nro_casa')
+            ->orderBy('fecha_reporte', 'desc')
+            ->get();
 
-    return view('operador.averias', compact('averias', 'viviendas'));
-}
+        return view('operador.averias', compact('averias', 'viviendas'));
+    }
 
-    // Función para procesar el reporte enviado desde el formulario
-    public function reportarAveria(Request $request) 
-    {
+    /**
+     * Procesa el reporte de medidor dañado
+     */
+    public function reportarAveria(Request $request) {
         $request->validate([
             'id_vivienda' => 'required',
-            'descripcion' => 'required|string'
+            'descripcion' => 'required|string|max:500'
         ]);
 
         DB::table('reporte_averias')->insert([
             'id_vivienda' => $request->id_vivienda,
-            'id_operador' => Auth::id() ?? 1, // Usa el ID del operador logueado
+            'id_operador' => Auth::id() ?? 1,
             'descripcion_problema' => $request->descripcion,
             'fecha_reporte' => now(),
             'estado_reparacion' => 'Pendiente'
         ]);
 
-        return redirect()->back()->with('success', 'Reporte de avería enviado correctamente.');
+        return redirect()->back()->with('success', 'Reporte de daño enviado correctamente.');
     }
 }

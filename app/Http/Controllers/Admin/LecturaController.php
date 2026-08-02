@@ -21,12 +21,12 @@ class LecturaController extends Controller
         $viviendas = Vivienda::where('estado_vivienda', true)->get();
         return view('admin.lecturas.create', compact('viviendas'));
     }
-public function showRecibo($id_cobro) // Ahora recibe el ID del COBRO
+public function showRecibo($id_cobro)
 {
-    // 1. Buscamos el COBRO exacto que el usuario presionó
+    // 1. Buscamos el cobro oficial
     $cobroOficial = \App\Models\Cobro::findOrFail($id_cobro);
 
-    // 2. Buscamos la LECTURA que corresponde a esa vivienda y ese mismo periodo
+    // 2. Buscamos la lectura correspondiente
     $lectura = \App\Models\Lectura::with(['vivienda.propietarios'])
         ->where('id_vivienda', $cobroOficial->id_vivienda)
         ->whereMonth('fecha_lectura', $cobroOficial->periodo_mes)
@@ -34,31 +34,42 @@ public function showRecibo($id_cobro) // Ahora recibe el ID del COBRO
         ->firstOrFail();
 
     $propietario = $lectura->vivienda->propietarios->first();
+    $id_propietario = $propietario->id_usuario ?? 0;
 
-    // 3. ASIGNAMOS LOS VALORES DEL COBRO (Sin recalcular nada)
+    // 3. BUSCAR MONTOS POR SEPARADO (Subdivisión)
+    $monto_wally = \DB::table('reservas')
+        ->join('areas_recreativas', 'reservas.id_area', '=', 'areas_recreativas.id_area')
+        ->where('reservas.id_usuario', $id_propietario)
+        ->whereMonth('reservas.fecha_reserva', $cobroOficial->periodo_mes)
+        ->whereYear('reservas.fecha_reserva', $cobroOficial->periodo_anio)
+        ->where('areas_recreativas.nombre_area', 'Wally')
+        ->sum('reservas.costo_pactado') ?? 0;
+
+    $monto_salon = \DB::table('reservas')
+        ->join('areas_recreativas', 'reservas.id_area', '=', 'areas_recreativas.id_area')
+        ->where('reservas.id_usuario', $id_propietario)
+        ->whereMonth('reservas.fecha_reserva', $cobroOficial->periodo_mes)
+        ->whereYear('reservas.fecha_reserva', $cobroOficial->periodo_anio)
+        ->where('areas_recreativas.nombre_area', 'Salón de Eventos')
+        ->sum('reservas.costo_pactado') ?? 0;
+
+    // 4. DATOS DEL COBRO
     $monto_consumo  = $cobroOficial->monto_agua;
     $alcantarillado = $cobroOficial->monto_alcantarillado;
+    $mantenimiento  = $cobroOficial->monto_mantenimiento;
     $mora           = $cobroOficial->monto_multa;
-    $monto_wally    = $cobroOficial->monto_reservas; // El cobro ya sabe cuánto de reservas tiene
-    
-    // Si quieres separar Wally de Salón, podrías usar una lógica extra, 
-    // pero por ahora usemos el monto_reservas que ya está en el cobro.
-    $monto_salon    = 0; 
-    if($monto_wally > 100) { // Un ejemplo: si es mucho, asumimos que es salón
-        $monto_salon = $monto_wally;
-        $monto_wally = 0;
-    }
 
-    $total = $cobroOficial->total_pagar;
+    // RECALCULAR EL TOTAL PARA QUE COINCIDA CON LA SUMA VISUAL
+    $total = $monto_consumo + $alcantarillado + $mantenimiento + $mora + $monto_wally + $monto_salon;
 
     $lect_ant = $lectura->lectura_anterior;
     $lect_act = $lectura->lectura_actual;
     $consumo_m3 = $lect_act - $lect_ant;
 
     return view('admin.lecturas.recibo', compact(
-        'lectura', 'propietario', 'lect_ant', 'lect_act', 
-        'consumo_m3', 'monto_consumo', 'alcantarillado', 
-        'mora', 'monto_wally', 'monto_salon', 'total'
+        'lectura', 'propietario', 'lect_ant', 'lect_act', 'consumo_m3',
+        'monto_consumo', 'alcantarillado', 'mantenimiento', 'mora', 
+        'monto_wally', 'monto_salon', 'total'
     ));
 }
 }
