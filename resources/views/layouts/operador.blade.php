@@ -21,7 +21,6 @@
         <nav>
             <a href="{{ route('operador.dashboard') }}">Inicio</a>
             <a href="{{ route('operador.lecturas.crear') }}">Registrar Lectura</a>
-            <a href="{{ route('operador.averias.index') }}">Reportar Medidor Mal</a>
             <a href="/" class="mt-5 text-warning">Cerrar Sesión</a>
         </nav>
     </div>

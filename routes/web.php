@@ -71,7 +71,6 @@ Route::get('/recibo/detalle/{id_cobro}', [LecturaController::class, 'showRecibo'
         Route::get('/lecturas/nueva', [OperadorController::class, 'nuevaLectura'])->name('operador.lecturas.crear');
         Route::post('/lecturas/guardar', [OperadorController::class, 'guardarLectura'])->name('operador.lecturas.store');
         Route::get('/averias', [OperadorController::class, 'listaAverias'])->name('operador.averias.index');
-        Route::post('/averias/reportar', [OperadorController::class, 'reportarAveria'])->name('operador.averias.store');
     });
 
 

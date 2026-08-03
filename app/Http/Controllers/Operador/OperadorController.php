@@ -130,39 +130,4 @@ class OperadorController extends Controller
             return back()->withErrors(['error' => 'Lectura no registrada: ' . $e->getMessage()]);
         }
     }
-
-    /**
-     * Muestra el historial de averías
-     */
-    public function listaAverias() {
-        $viviendas = Vivienda::where('estado_vivienda', true)->get();
-        
-        $averias = DB::table('reporte_averias')
-            ->join('viviendas', 'reporte_averias.id_vivienda', '=', 'viviendas.id_vivienda')
-            ->select('reporte_averias.*', 'viviendas.nro_casa')
-            ->orderBy('fecha_reporte', 'desc')
-            ->get();
-
-        return view('operador.averias', compact('averias', 'viviendas'));
-    }
-
-    /**
-     * Procesa el reporte de medidor dañado
-     */
-    public function reportarAveria(Request $request) {
-        $request->validate([
-            'id_vivienda' => 'required',
-            'descripcion' => 'required|string|max:500'
-        ]);
-
-        DB::table('reporte_averias')->insert([
-            'id_vivienda' => $request->id_vivienda,
-            'id_operador' => Auth::id() ?? 1,
-            'descripcion_problema' => $request->descripcion,
-            'fecha_reporte' => now(),
-            'estado_reparacion' => 'Pendiente'
-        ]);
-
-        return redirect()->back()->with('success', 'Reporte de daño enviado correctamente.');
-    }
 }
