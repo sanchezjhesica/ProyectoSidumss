@@ -1,0 +1,30 @@
+/* Variables del Sistema Stellar */
+:root {
+    --stellar-blue: #0e5cad;
+    --stellar-grad: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
+    --stellar-button: linear-gradient(45deg, #22349e 0%, #8183e6 100%);
+    --stellar-input-focus: rgba(14, 92, 173, 0.1);
+}
+
+/* Tipografía y Textos */
+.text-stellar-blue { color: var(--stellar-blue); }
+.uppercase-tracking { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: #888; }
+
+/* Componentes de Formulario */
+.form-label-stellar { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #777; margin-bottom: 8px; display: block; }
+.form-stellar { border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px 15px; background-color: #fdfdfd; transition: all 0.3s ease; font-size: 0.95rem; }
+.form-stellar:focus { border-color: var(--stellar-blue); background-color: #fff; box-shadow: 0 0 0 0.25rem var(--stellar-input-focus); }
+
+/* Botones y Acciones */
+.btn-stellar { background: var(--stellar-button); color: white !important; border-radius: 50px; padding: 10px 25px; font-weight: 700; border: none; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; }
+.btn-stellar:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(34, 52, 158, 0.3); }
+
+.btn-edit-stellar, .btn-delete-stellar, .btn-reset-stellar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50px; padding: 5px 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; transition: all 0.3s ease; }
+.btn-reset-stellar { color: #f39c12; border: 1px solid #f39c12; background-color: #fffaf0; }
+.btn-edit-stellar { color: var(--stellar-blue); border: 1px solid var(--stellar-blue); background-color: #f0f7ff; }
+.btn-delete-stellar { color: #e74c3c; border: 1px solid #e74c3c; background-color: #fff5f5; }
+
+/* Tablas y Avatares */
+.avatar-stellar { width: 38px; height: 35px; background: var(--stellar-grad); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; flex-shrink: 0; }
+.bg-blue-soft { background-color: rgba(14, 92, 173, 0.08); }
+.rounded-4 { border-radius: 1.25rem !important; }
