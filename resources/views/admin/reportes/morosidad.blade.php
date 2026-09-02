@@ -26,10 +26,14 @@
                 </div>
                 <div>
                     <h6 class="text-muted mb-1 text-uppercase small fw-bold">Total Deuda Global</h6>
+                    <!-- Total Deuda Global -->
                     <h2 class="fw-bold mb-0 text-danger-stellar">
-                        Bs. {{ number_format($morosos->sum('total_pagar'), 2) }}
+                        Bs. {{ number_format($morosos->sum('total_deuda'), 2) }}
                     </h2>
-                </div>
+
+                    <!-- Casas con Deuda -->
+                    <h2 class="fw-bold mb-0 text-purple">{{ $morosos->count() }}</h2>
+                                    </div>
             </div>
         </div>
         <div class="col-md-6">
@@ -66,18 +70,23 @@
                         @forelse($morosos as $m)
                         <tr>
                             <td class="ps-4 fw-bold">
-                                <span class="badge bg-purple-soft text-purple px-3 py-2">Casa #{{ $m->vivienda->nro_casa }}</span>
+                                <span class="badge bg-purple-soft text-purple px-3 py-2">Casa #{{ $m->nro_casa }}</span>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark">{{ $m->vivienda->propietarios->first()->nombre ?? 'S/N' }}</div>
+                                {{-- RELACIÓN CORREGIDA: de propietario (singular) --}}
+                                <div class="fw-bold text-dark">{{ $m->propietario->nombre ?? 'Sin Propietario' }} {{ $m->propietario->apellido_paterno ?? '' }}</div>
+                                <small class="text-muted">CI: {{ $m->propietario->ci ?? '---' }}</small>
                             </td>
-                            <td>{{ $m->periodo_mes }}/{{ $m->periodo_anio }}</td>
+                            <td>
+                                <span class="text-dark">{{ $m->cantidad_avisos }} avisos pendientes</span>
+                            </td>
                             <td class="text-danger-stellar fw-bold fs-6">
-                                Bs. {{ number_format($m->total_pagar, 2) }}
+                                {{-- VARIABLE CORREGIDA: total_deuda --}}
+                                Bs. {{ number_format($m->total_deuda, 2) }}
                             </td>
                             <td class="text-center">
                                 <span class="badge rounded-pill bg-danger-soft text-danger-stellar px-3 py-2">
-                                    <i class="fas fa-clock me-1"></i> {{ $m->estado_pago }}
+                                    <i class="fas fa-clock me-1"></i> PENDIENTE
                                 </span>
                             </td>
                         </tr>

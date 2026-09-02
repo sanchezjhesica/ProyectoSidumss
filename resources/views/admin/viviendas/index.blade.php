@@ -2,20 +2,17 @@
 
 @section('content')
 <div class="viviendas-stellar">
-    <!-- 1. ENCABEZADO ESTILO STELLAR -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-4">
+    <!-- 1. ENCABEZADO RESPONSIVO -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mb-md-5 border-bottom pb-4 gap-3">
         <div>
-            <h2 class="text-purple mb-0"><i class="fas fa-city me-2"></i> Gestión de Viviendas</h2>
-            <p class="text-muted mb-0">Administre el inventario de propiedades, medidores y tipos de vivienda de la urbanización.</p>
+            <h2 class="text-stellar-blue mb-0 fw-bold"><i class="fas fa-city me-2"></i> Designación de Propietarios</h2>
+            <p class="text-muted mb-0">Asigne y gestione los responsables de cada unidad habitacional.</p>
         </div>
-        <a href="{{ route('admin.viviendas.create') }}" class="btn btn-purple-stellar shadow-sm">
-            <i class="fas fa-plus-circle me-2"></i> Nueva Vivienda
-        </a>
     </div>
 
-    <!-- 2. MENSAJE DE ÉXITO ESTILIZADO -->
+    <!-- 2. ALERTA DE ÉXITO -->
     @if(session('success'))
-        <div class="alert alert-stellar alert-dismissible fade show mb-4" role="alert">
+        <div class="alert alert-stellar alert-dismissible fade show mb-4 shadow-sm" role="alert">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -28,10 +25,10 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4 py-3 uppercase-tracking">Casa</th>
+                            <th class="ps-4 py-3 uppercase-tracking">Vivienda / Casa</th>
                             <th class="py-3 uppercase-tracking">Medidor</th>
-                            <th class="py-3 uppercase-tracking">Ubicación / Calle</th>
-                            <th class="py-3 uppercase-tracking">Tipo</th>
+                            <th class="py-3 uppercase-tracking">Responsable de Pago</th>
+                            <th class="py-3 uppercase-tracking d-none d-md-table-cell">Tipo</th>
                             <th class="py-3 text-center uppercase-tracking">Acciones</th>
                         </tr>
                     </thead>
@@ -40,42 +37,42 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="property-icon me-3">
+                                    <!-- Icono con Degradado -->
+                                    <div class="property-icon-stellar me-3">
                                         <i class="fas fa-home"></i>
                                     </div>
-                                    <span class="fw-bold text-dark fs-6">Casa #{{ $v->nro_casa }}</span>
+                                    <div>
+                                        <span class="fw-bold text-dark fs-6">Casa #{{ $v->nro_casa }}</span>
+                                        <div class="small text-muted d-md-none">{{ $v->tipo_vivienda }}</div>
+                                    </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-purple-soft text-purple px-3 py-2 fw-bold">
-                                    <i class="fas fa-tachometer-alt me-1"></i> {{ $v->nro_medidor }}
+                                <span class="badge-stellar bg-blue-soft text-stellar-blue">
+                                    {{ $v->nro_medidor }}
                                 </span>
                             </td>
                             <td>
-                                <span class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i> {{ $v->calle ?? 'Sin dirección' }}</span>
-                            </td>
-                            <td>
-                                @if($v->tipo_vivienda == 'Casa')
-                                    <span class="text-dark small"><i class="fas fa-building me-1 text-muted"></i> Habitación</span>
+                                @if($v->propietario)
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark">{{ $v->propietario->nombre }} {{ $v->propietario->apellido_paterno }}</span>
+                                        <small class="text-muted">CI: {{ $v->propietario->ci }}</small>
+                                    </div>
                                 @else
-                                    <span class="text-muted small italic"><i class="fas fa-seedling me-1"></i> {{ $v->tipo_vivienda }}</span>
+                                    <span class="badge-stellar bg-danger-soft text-danger">
+                                        <i class="fas fa-user-slash me-1 small"></i> Sin Propietario
+                                    </span>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    {{-- BOTÓN EDITAR (Estilo Pill) --}}
-                                    <a href="{{ route('admin.viviendas.edit', $v->id_vivienda) }}" class="btn btn-sm btn-edit-stellar">
-                                        <i class="fas fa-edit me-1"></i> Editar
+                            <td class="d-none d-md-table-cell">
+                                <span class="text-muted small fw-bold text-uppercase">{{ $v->tipo_vivienda }}</span>
+                            </td>
+                            <td class="text-center pe-3">
+                                <div class="d-flex justify-content-center">
+                                    <!-- Botón Designar Estilo Pill -->
+                                    <a href="{{ route('admin.viviendas.edit', $v->id_vivienda) }}" class="btn btn-sm btn-designar-stellar shadow-sm">
+                                        <i class="fas fa-user-tag me-1"></i> <span class="d-none d-lg-inline">Gestionar Dueño</span>
                                     </a>
-
-                                    {{-- BOTÓN ELIMINAR (Estilo Icono Circular) --}}
-                                    <form action="{{ route('admin.viviendas.destroy', $v->id_vivienda) }}" method="POST" onsubmit="return confirm('¿Eliminar esta vivienda?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-delete-stellar">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -88,85 +85,83 @@
 </div>
 
 <style>
-    /* VARIABLES Y ESTILOS STELLAR */
-    .text-purple { color: #5f4d93; }
-    .bg-purple-soft { background-color: rgba(95, 77, 147, 0.08); }
+    /* VARIABLES UNIFICADAS */
+    :root {
+        --stellar-blue: #0e5cad;
+        --stellar-grad: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
+        --stellar-button: linear-gradient(45deg, #22349e 0%, #8183e6 100%);
+    }
+
+    .text-stellar-blue { color: var(--stellar-blue); }
+    .bg-blue-soft { background-color: rgba(14, 92, 173, 0.08); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
     
     .uppercase-tracking {
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 1.2px;
         font-weight: 700;
         color: #888;
     }
 
-    /* Icono de Propiedad */
-    .property-icon {
-        width: 35px;
-        height: 35px;
-        background: #f8f9fa;
-        color: #5f4d93;
-        border-radius: 8px;
+    /* Icono de Propiedad con Degradado */
+    .property-icon-stellar {
+        width: 38px;
+        height: 38px;
+        background: var(--stellar-grad);
+        color: white;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid #eee;
+        font-size: 1rem;
+        box-shadow: 0 4px 10px rgba(121, 241, 164, 0.3);
     }
 
-    /* Botones de Acción */
-    .btn-purple-stellar {
-        background: linear-gradient(45deg, #5f4d93 0%, #e37682 100%);
-        color: white;
+    /* Badges Estilo Stellar */
+    .badge-stellar {
+        display: inline-block;
+        padding: 6px 12px;
         border-radius: 50px;
-        padding: 10px 25px;
-        font-weight: bold;
-        border: none;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Botón Designar / Editar */
+    .btn-designar-stellar {
+        color: var(--stellar-blue);
+        border: 1px solid var(--stellar-blue);
+        background-color: white;
+        border-radius: 50px;
+        padding: 6px 18px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
         transition: 0.3s;
     }
-    .btn-purple-stellar:hover {
+    .btn-designar-stellar:hover {
+        background: var(--stellar-blue);
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(95, 77, 147, 0.3);
     }
 
-    .btn-edit-stellar {
-        color: #5f4d93;
-        border: 1px solid #5f4d93;
-        border-radius: 50px;
-        padding: 5px 15px;
-        font-weight: 600;
-        transition: 0.3s;
-    }
-    .btn-edit-stellar:hover {
-        background: #5f4d93;
-        color: white;
-    }
-
-    .btn-delete-stellar {
-        color: #e74c3c;
-        border: 1px solid #e74c3c;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.3s;
-    }
-    .btn-delete-stellar:hover {
-        background: #e74c3c;
-        color: white;
-    }
-
-    /* Alertas */
+    /* Alerta Personalizada */
     .alert-stellar {
         background: #fff;
-        border-left: 5px solid #5f4d93;
-        color: #5f4d93;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-left: 5px solid var(--stellar-blue);
+        color: var(--stellar-blue);
         border-radius: 8px;
     }
 
-    .rounded-4 { border-radius: 1rem !important; }
+    .rounded-4 { border-radius: 1.25rem !important; }
+
+    /* Ajustes móviles */
+    @media (max-width: 768px) {
+        .property-icon-stellar { width: 32px; height: 32px; font-size: 0.85rem; }
+        .btn-designar-stellar { padding: 8px; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .btn-designar-stellar i { margin: 0 !important; }
+    }
 </style>
 @endsection

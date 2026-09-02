@@ -2,39 +2,38 @@
 
 @section('content')
 <div class="reporte-vivienda-stellar">
-    <!-- Cabecera -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-4">
+    <!-- 1. CABECERA RESPONSIVA -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mb-md-5 border-bottom pb-4 gap-3">
         <div>
-            <h2 class="text-purple mb-0"><i class="fas fa-search-location me-2"></i> Estado de Cuenta por Vivienda</h2>
-            <p class="text-muted mb-0">Consulte el historial de pagos y consumos detallados de una propiedad específica.</p>
+            <h2 class="text-stellar-blue mb-0 fw-bold"><i class="fas fa-file-invoice me-2"></i> Reporte por Vivienda</h2>
+            <p class="text-muted mb-0">Historial consolidado de servicios y consumo medido.</p>
         </div>
         @if($viviendaSeleccionada)
-        <div class="no-print">
-            <button onclick="window.print()" class="btn btn-purple-stellar px-4">
-                <i class="fas fa-print me-2"></i> Imprimir Reporte
-            </button>
-        </div>
+            {{-- BOTÓN ACTUALIZADO PARA DESCARGAR PDF --}}
+            <a href="{{ route('admin.reportes.vivienda.descargar', $viviendaSeleccionada->id_vivienda) }}" class="btn btn-stellar-blue px-4 shadow-sm w-100 w-md-auto">
+                <i class="fas fa-file-pdf me-2"></i> Descargar Historial PDF
+            </a>
         @endif
     </div>
 
-    <!-- Buscador Estilizado -->
-    <div class="card border-0 shadow-sm mb-5 rounded-4">
+    <!-- 2. BUSCADOR FILTRADO -->
+    <div class="card border-0 shadow-sm mb-5 rounded-4 bg-light-soft no-print">
         <div class="card-body p-4">
             <form action="{{ route('admin.reportes.vivienda') }}" method="GET" class="row g-3 align-items-end">
                 <div class="col-md-9">
-                    <label class="form-label fw-bold text-dark"><i class="fas fa-home me-2 text-purple"></i>Seleccionar Vivienda / Casa</label>
-                    <select name="id_vivienda" class="form-select form-stellar" required>
-                        <option value="">-- Seleccione una casa para analizar --</option>
+                    <label class="form-label-stellar">Seleccionar Vivienda</label>
+                    <select name="id_vivienda" class="form-select select2-stellar" required>
+                        <option value="">-- Seleccione una casa para consultar --</option>
                         @foreach($viviendas as $v)
                             <option value="{{ $v->id_vivienda }}" {{ request('id_vivienda') == $v->id_vivienda ? 'selected' : '' }}>
-                                Casa {{ $v->nro_casa }} · Medidor: {{ $v->nro_medidor }}
+                                Casa #{{ $v->nro_casa }} · Propietario: {{ $v->propietario->nombre ?? 'S/N' }} {{ $v->propietario->apellido_paterno ?? '' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-purple-stellar w-100 py-2">
-                        <i class="fas fa-sync-alt me-2"></i> Generar Reporte
+                    <button type="submit" class="btn btn-stellar-blue w-100 py-2">
+                        <i class="fas fa-search me-2"></i>Consultar
                     </button>
                 </div>
             </form>
@@ -42,46 +41,151 @@
     </div>
 
     @if($viviendaSeleccionada)
-    <!-- Resumen de la Vivienda -->
-    <div class="propiedad-info-card shadow-sm mb-5 d-flex align-items-center p-4">
-        <div class="icon-circle-purple me-4">
-            <i class="fas fa-map-marked-alt"></i>
-        </div>
-        <div>
-            <h4 class="mb-1 fw-bold text-dark">Propiedad: Casa #{{ $viviendaSeleccionada->nro_casa }}</h4>
-            <p class="text-muted mb-0">
-                <i class="fas fa-user-circle me-1"></i> Propietario: 
-                <span class="fw-bold text-purple">{{ $viviendaSeleccionada->propietarios->first()->nombre ?? 'Sin Asignar' }}</span>
-            </p>
+    <!-- 3. INFO DE LA PROPIEDAD SELECCIONADA -->
+    <div class="propiedad-info-card shadow-sm mb-5 p-4 bg-white rounded-4 border-start border-stellar-blue border-5">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <small class="text-uppercase fw-bold text-muted letter-spacing-1">Información de Unidad</small>
+                <h3 class="mb-1 fw-bold text-dark">Casa #{{ $viviendaSeleccionada->nro_casa }}</h3>
+                <p class="text-muted mb-0">Responsable: <b class="text-stellar-blue">{{ $viviendaSeleccionada->propietario->nombre }} {{ $viviendaSeleccionada->propietario->apellido_paterno }}</b></p>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <span class="badge bg-blue-soft text-stellar-blue p-2 px-3 fw-bold rounded-pill">
+                    <i class="fas fa-tachometer-alt me-2"></i>Medidor: {{ $viviendaSeleccionada->nro_medidor }}
+                </span>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- TABLA PAGOS -->
+    <!-- 4. GRILLA DE REPORTES DETALLADOS -->
+    <div class="row g-4">
+        
+        <!-- HISTORIAL DE AGUA -->
         <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold text-purple"><i class="fas fa-money-check-alt me-2"></i> Historial de Pagos</h5>
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom border-info border-opacity-25">
+                    <h6 class="mb-0 fw-bold text-info"><i class="fas fa-tint me-2"></i> Consumos de Agua</h6>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4 uppercase-tracking">Periodo</th>
-                                <th class="uppercase-tracking">Monto</th>
-                                <th class="text-center uppercase-tracking">Estado</th>
-                            </tr>
-                        </thead>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 py-2 uppercase-tracking">Periodo</th>
+                                    <th class="uppercase-tracking">Monto</th>
+                                    <th class="text-center uppercase-tracking">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pagosAgua as $a)
+                                <tr>
+                                    <td class="ps-3">{{ $a->mes }}/{{ $a->anio }}</td>
+                                    <td class="fw-bold">Bs. {{ number_format($a->total_pagar, 2) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge-stellar {{ $a->estado_pago == 'Pagado' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
+                                            {{ $a->estado_pago }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="3" class="text-center py-4 text-muted small">Sin registros de agua.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORIAL DE MANTENIMIENTO -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom border-warning border-opacity-25">
+                    <h6 class="mb-0 fw-bold text-warning"><i class="fas fa-tools me-2"></i> Mantenimiento Fijo</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 py-2 uppercase-tracking">Periodo</th>
+                                    <th class="uppercase-tracking">Monto</th>
+                                    <th class="text-center uppercase-tracking">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pagosMante as $m)
+                                <tr>
+                                    <td class="ps-3">{{ $m->mes }}/{{ $m->anio }}</td>
+                                    <td class="fw-bold">Bs. {{ number_format($m->monto_fijo, 2) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge-stellar {{ $m->estado_pago == 'Pagado' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
+                                            {{ $m->estado_pago }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="3" class="text-center py-4 text-muted small">Sin registros de mantenimiento.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORIAL DE EXPENSAS / REMESAS -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="mb-0 fw-bold text-stellar-blue"><i class="fas fa-hand-holding-usd me-2"></i> Detalle de Expensas y Remesas</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 py-2 uppercase-tracking">Concepto</th>
+                                    <th class="uppercase-tracking">Periodo</th>
+                                    <th class="uppercase-tracking">Monto</th>
+                                    <th class="text-center uppercase-tracking">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pagosRemesas as $r)
+                                <tr>
+                                    <td class="ps-3"><b>{{ $r->configuracion->nombre_remesa ?? 'Expensa Extra' }}</b></td>
+                                    <td>{{ $r->mes }}/{{ $r->anio }}</td>
+                                    <td class="fw-bold">Bs. {{ number_format($r->monto_pactado, 2) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge-stellar {{ $r->estado_pago == 'Pagado' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
+                                            {{ $r->estado_pago }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4" class="text-center py-4 text-muted small">Sin registros de remesas.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÚLTIMAS LECTURAS REGISTRADAS -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 border-top border-info border-5">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-chart-line me-2"></i> Consumo Reciente (m³)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
                         <tbody>
-                            @foreach($historialPagos as $p)
+                            @foreach($historialLecturas->take(6) as $l)
                             <tr>
-                                <td class="ps-4 fw-bold">{{ $p->periodo_mes }}/{{ $p->periodo_anio }}</td>
-                                <td>Bs. {{ number_format($p->total_pagar, 2) }}</td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill {{ $p->estado_pago == 'Pagado' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }} px-3 py-2">
-                                        {{ $p->estado_pago }}
-                                    </span>
-                                </td>
+                                <td class="ps-3 py-2 text-muted">Mes {{ $l->periodo_mes }} / {{ $l->periodo_anio }}</td>
+                                <td class="text-end fw-bold text-info pe-3">{{ number_format($l->consumo_m3, 2) }} m³</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -90,99 +194,59 @@
             </div>
         </div>
 
-        <!-- TABLA CONSUMO -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold text-info"><i class="fas fa-faucet me-2"></i> Consumo de Agua</h5>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4 uppercase-tracking">Fecha</th>
-                                <th class="uppercase-tracking text-center">m³</th>
-                                <th class="uppercase-tracking">Lecturas (Ant/Act)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($historialLecturas as $l)
-                            <tr>
-                                <td class="ps-4">{{ \Carbon\Carbon::parse($l->fecha_lectura)->format('d/m/y') }}</td>
-                                <td class="text-center">
-                                    <span class="fw-bold text-info fs-6">{{ $l->lectura_actual - $l->lectura_anterior }}</span>
-                                </td>
-                                <td class="small text-muted">
-                                    {{ number_format($l->lectura_anterior, 1) }} → {{ number_format($l->lectura_actual, 1) }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
     @endif
 </div>
 
 <style>
-    .text-purple { color: #5f4d93; }
+    /* VARIABLES STELLAR GREEN/BLUE */
+    :root {
+        --stellar-blue: #0e5cad;
+        --stellar-button: linear-gradient(45deg, #22349e 0%, #8183e6 100%);
+    }
+
+    .text-stellar-blue { color: var(--stellar-blue); }
+    .bg-blue-soft { background-color: rgba(14, 92, 173, 0.08); }
     .bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
     .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+    .bg-light-soft { background-color: #f8f9fa; }
     
-    .uppercase-tracking {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 700;
-        color: #888;
-    }
+    .uppercase-tracking { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: #888; }
+    .letter-spacing-1 { letter-spacing: 1px; }
 
-    .form-stellar {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 10px;
-    }
-
-    .propiedad-info-card {
-        background: #fff;
-        border-radius: 15px;
-        border-left: 5px solid #5f4d93;
-    }
-
-    .icon-circle-purple {
-        width: 60px; height: 60px;
-        background: rgba(95, 77, 147, 0.1);
-        color: #5f4d93;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .btn-purple-stellar {
-        background: #5f4d93;
-        color: white;
+    /* Estilo del Badge Redondeado */
+    .badge-stellar {
+        display: inline-block;
+        padding: 4px 10px;
         border-radius: 50px;
-        font-weight: bold;
-        border: none;
-        transition: 0.3s;
-    }
-    .btn-purple-stellar:hover {
-        background: #4a3b75;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(95, 77, 147, 0.3);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
     }
 
-    .rounded-4 { border-radius: 1rem !important; }
+    /* Input y Labels */
+    .form-label-stellar { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #777; margin-bottom: 8px; display: block; }
 
+    /* Botón Stellar Blue */
+    .btn-stellar-blue { 
+        background: var(--stellar-button); 
+        color: white !important; 
+        border-radius: 50px; 
+        font-weight: bold; 
+        border: none; 
+        padding: 10px 25px;
+        transition: 0.3s; 
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+    .btn-stellar-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(34, 52, 158, 0.3); }
+
+    .rounded-4 { border-radius: 1.25rem !important; }
+
+    /* Ajuste para impresión manual (por si acaso) */
     @media print {
-        .no-print, nav, #header-stellar { display: none !important; }
-        body { background: white !important; }
-        .main-wrapper { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .no-print { display: none !important; }
         .main-card { box-shadow: none !important; border: none !important; padding: 0 !important; }
-        .propiedad-info-card { border: 1px solid #000 !important; }
-        .table { font-size: 12px; }
     }
 </style>
 @endsection
