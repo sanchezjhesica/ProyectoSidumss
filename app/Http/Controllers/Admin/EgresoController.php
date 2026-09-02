@@ -10,26 +10,36 @@ class EgresoController extends Controller
 {
     public function index()
     {
-        $egresos = Egreso::all();
+        $egresos = Egreso::with('administrador')->orderBy('fecha_egreso', 'desc')->get();
         return view('admin.egresos.index', compact('egresos'));
     }
 
-    public function create()
+    public function store(Request $request)
     {
-        return view('admin.egresos.create');
+        $request->validate([
+            'descripcion' => 'required|string',
+            'monto' => 'required|numeric',
+            'categoria' => 'required',
+            'fecha_egreso' => 'required|date',
+        ]);
+
+
+        Egreso::create([
+            'descripcion' => $request->descripcion,
+            'monto' => $request->monto,
+            'categoria' => $request->categoria,
+            'fecha_egreso' => $request->fecha_egreso,
+            'id_admin' => auth()->id(), 
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Gasto registrado correctamente');
     }
 
-public function store(Request $request)
-{
-    $request->validate([
-        'descripcion' => 'required',
-        'monto' => 'required|numeric',
-        'categoria' => 'required',
-        'fecha_pago' => 'required|date',
-    ]);
-
-    \App\Models\Egreso::create($request->all());
-
-    return redirect()->route('admin.dashboard')->with('success', 'Gasto registrado correctamente.');
-}
+    public function destroy($id)
+    {
+        $egreso = Egreso::findOrFail($id);
+        $egreso->delete();
+    
+        return back()->with('success', 'Registro de gasto eliminado.');
+    }
 }

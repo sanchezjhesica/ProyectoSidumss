@@ -4,47 +4,71 @@ namespace App\Http\Controllers\Propietario;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vivienda;
-use App\Models\Cobro;
+use App\Models\CobroAgua;
+use App\Models\CobroMantenimiento;
+use App\Models\CobroRemesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class PropietarioController extends Controller
 {
     public function index() {
         $id_usuario = Auth::id(); 
-
-        $viviendas = Vivienda::whereHas('propietarios', function($q) use($id_usuario) {
-            $q->where('propietario_vivienda.id_usuario', $id_usuario);
-        })->get();
-
+        $viviendas = Vivienda::where('id_propietario', $id_usuario)->get();
         return view('propietario.dashboard', compact('viviendas'));
     }
+
+    /**
+     * Muestra la lista de recibos y pasa la configuración del QR
+     */
     public function misAvisos() {
         $id_usuario = Auth::id();
-        $avisos = Cobro::whereIn('id_vivienda', function($query) use ($id_usuario) {
-            $query->select('id_vivienda')
-                  ->from('propietario_vivienda')
-                  ->where('id_usuario', $id_usuario);
-        })->orderBy('periodo_anio', 'desc')
-          ->orderBy('periodo_mes', 'desc')
-          ->get();
+        $misViviendasIds = Vivienda::where('id_propietario', $id_usuario)->pluck('id_vivienda');
 
-        return view('propietario.avisos', compact('avisos'));
+        // 1. Avisos de Agua
+        $avisosAgua = CobroAgua::whereIn('id_vivienda', $misViviendasIds)
+            ->orderBy('anio', 'desc')->orderBy('mes', 'desc')->get();
+            
+        // 2. Avisos de Mantenimiento
+        $avisosMantenimiento = CobroMantenimiento::whereIn('id_vivienda', $misViviendasIds)
+            ->orderBy('anio', 'desc')->orderBy('mes', 'desc')->get();
+            
+        // 3. Avisos de Remesas (Agrupados)
+        $avisosRemesas = CobroRemesa::whereIn('id_vivienda', $misViviendasIds)
+            ->select(
+                'id_vivienda', 
+                'mes', 
+                'anio', 
+                'estado_pago', 
+                DB::raw('SUM(monto_pactado) as total_mes'), 
+                DB::raw('MAX(id_cobro_remesa) as id_referencia') 
+            )
+            ->groupBy('id_vivienda', 'mes', 'anio', 'estado_pago')
+            ->orderBy('anio', 'desc')->orderBy('mes', 'desc')
+            ->get();
+
+        // 4. NUEVO: Obtener la configuración de tarifas activa (donde está el QR)
+        $config = DB::table('configuracion_tarifas')->where('estado', true)->first();
+
+        return view('propietario.avisos', compact('avisosAgua', 'avisosMantenimiento', 'avisosRemesas', 'config'));
     }
+
     public function misReservas() {
         $id_usuario = Auth::id();
         $reservas = DB::table('reservas')
             ->join('areas_recreativas', 'reservas.id_area', '=', 'areas_recreativas.id_area')
             ->where('reservas.id_usuario', $id_usuario)
-            ->select('reservas.*', 'areas_recreativas.nombre_area')
+            ->select('reservas.*', 'areas_recreativas.nombre_area') 
             ->orderBy('fecha_reserva', 'desc')
             ->get();
 
         $areas = DB::table('areas_recreativas')->get();
-
         return view('propietario.reservas', compact('reservas', 'areas'));
     }
+
     public function guardarReserva(Request $request) {
         $request->validate([
             'id_area' => 'required',
@@ -52,19 +76,79 @@ class PropietarioController extends Controller
         ]);
 
         $id_usuario = Auth::id();
-        $costo = DB::table('areas_recreativas')
-                   ->where('id_area', $request->id_area)
-                   ->value('costo_estandar');
+        $area = DB::table('areas_recreativas')->where('id_area', $request->id_area)->first();
 
         DB::table('reservas')->insert([
             'id_usuario' => $id_usuario,
             'id_area' => $request->id_area,
             'fecha_reserva' => $request->fecha,
-            'costo_pactado' => $costo,
-            'estado_pago' => 'Pendiente',
-            'created_at' => now()
+            'costo_pactado' => $area->costo_reserva,
+            'estado_pago' => 'Pendiente'
         ]);
 
-        return redirect()->back()->with('success', 'Reserva realizada con éxito. El monto se cargará en su próximo aviso de cobro.');
+        return redirect()->back()->with('success', 'Reserva realizada con éxito.');
+    }
+
+    // --- MÉTODOS PARA DESCARGAR PDF ---
+
+    public function descargarAvisoAgua($id) {
+        $cobro = CobroAgua::with(['vivienda.propietario', 'lectura'])->findOrFail($id);
+        $montoReservas = DB::table('reservas')
+            ->where('id_usuario', $cobro->vivienda->id_propietario)
+            ->whereMonth('fecha_reserva', $cobro->mes)
+            ->whereYear('fecha_reserva', $cobro->anio)
+            ->where('estado_pago', 'Pendiente')
+            ->sum('costo_pactado');
+
+        $pdf = Pdf::loadView('propietario.recibo_agua', compact('cobro', 'montoReservas'));
+        $pdf->setPaper('letter', 'portrait');
+        return $pdf->download("Aviso_Agua_{$cobro->mes}_{$cobro->anio}.pdf");
+    }
+
+    public function descargarAvisoMantenimiento($id) {
+        $cobro = CobroMantenimiento::with(['vivienda.propietario'])->findOrFail($id);
+        $pdf = Pdf::loadView('propietario.recibo_mantenimiento', compact('cobro'));
+        $pdf->setPaper('letter', 'portrait');
+        return $pdf->download("Aviso_Mantenimiento_{$cobro->mes}_{$cobro->anio}.pdf");
+    }
+
+    public function descargarAvisoRemesas($id) {
+        $referencia = CobroRemesa::findOrFail($id);
+        $detallesRemesas = CobroRemesa::with(['configuracion', 'vivienda.propietario'])
+            ->where('id_vivienda', $referencia->id_vivienda)
+            ->where('mes', $referencia->mes)
+            ->where('anio', $referencia->anio)
+            ->get();
+
+        $cobro = $detallesRemesas->first();
+        $pdf = Pdf::loadView('propietario.recibo_remesas', compact('detallesRemesas', 'cobro'));
+        $pdf->setPaper('letter', 'portrait');
+        return $pdf->download("Aviso_Expensas_{$cobro->mes}_{$cobro->anio}.pdf");
+    }
+
+    // --- FUNCIÓN PARA SUBIR COMPROBANTE ---
+
+    public function subirComprobante(Request $request)
+    {
+        $request->validate([
+            'comprobante' => 'required|image|max:2048',
+            'id_pago' => 'required',
+            'tipo_pago' => 'required'
+        ]);
+
+        // Guardar imagen en storage/app/public/comprobantes
+        $ruta = $request->file('comprobante')->store('comprobantes', 'public');
+
+        // Insertar en la tabla de comprobantes_pago
+        DB::table('comprobantes_pago')->insert([
+            'id_usuario' => Auth::id(),
+            'id_referencia_pago' => $request->id_pago,
+            'tipo_pago' => $request->tipo_pago,
+            'ruta_imagen' => $ruta,
+            'estado' => 'Pendiente',
+            'fecha_subida' => now()
+        ]);
+
+        return back()->with('success', '¡Comprobante enviado con éxito! Espere la validación del administrador.');
     }
 }
