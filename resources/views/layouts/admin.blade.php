@@ -10,211 +10,272 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
     
+    <!-- SELECT2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <style>
         :root {
-            --stellar-grad: linear-gradient(45deg, #e37682 15%, #5f4d93 85%);
-            --stellar-purple: #5f4d93;
-            --stellar-text: #636363;
-            --stellar-light: #f4f4f4;
+            --stellar-grad: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
+            --stellar-blue: #0e5cad;
+            --stellar-text: #201f1f;
+            --stellar-muted: #807b7b;
+            --sidebar-width: 280px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            background-color: #935d8c;
             background-image: var(--stellar-grad);
             background-attachment: fixed;
+            background-size: cover;
             font-family: 'Source Sans Pro', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: white;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        #header-stellar {
-            text-align: center;
-            padding: 5rem 0 3.5rem 0;
-        }
-        
-        #header-stellar h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            letter-spacing: 0.5rem;
             margin: 0;
-            text-transform: uppercase;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        #header-stellar p {
-            font-weight: 300;
-            letter-spacing: 2px;
-            opacity: 0.8;
-            margin-top: 10px;
-        }
-
-        #main-nav {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px); /* Efecto de desenfoque moderno */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 10000;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-        }
-
-        #main-nav ul {
             display: flex;
-            justify-content: center;
-            list-style: none;
+        }
+
+        /* --- BARRA MÓVIL (ISLA FLOTANTE) --- */
+        #mobile-top-bar {
+            display: none;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 0.6rem 1.5rem;
+            position: fixed;
+            top: 15px; left: 15px; right: 15px;
+            z-index: 1000;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mobile-top-bar h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 2px;
             margin: 0;
-            padding: 0;
-            flex-wrap: wrap; 
+            color: var(--stellar-blue);
         }
 
-        #main-nav ul li {
-            position: relative;
+        /* --- SIDEBAR LATERAL --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 2000;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
         }
 
-        #main-nav ul li a {
-            display: block;
-            padding: 1.5rem 1.2rem;
-            color: var(--stellar-text);
-            text-decoration: none;
+        .sidebar-header {
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+        .sidebar-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--stellar-blue);
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 0 1rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+
+        .sidebar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.9rem 1.2rem;
+            color: var(--stellar-muted) !important;
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 0.2rem;
+            letter-spacing: 1px;
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 5px;
             transition: var(--transition);
         }
 
-        #main-nav ul li a:hover {
-            color: var(--stellar-purple);
-            background: rgba(95, 77, 147, 0.05);
+        .sidebar-nav .nav-link i { width: 25px; margin-right: 12px; text-align: center; font-size: 1.1rem; }
+
+        .sidebar-nav .nav-link:hover, 
+        .sidebar-nav .nav-link.active {
+            color: var(--stellar-blue) !important;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transform: translateX(5px);
         }
 
-        .nav-dropdown:hover .dropdown-content {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        /* Dropdown interno */
+        .sidebar-nav .dropdown-menu {
+            background: rgba(0,0,0,0.03);
+            border: none;
+            margin-left: 1.5rem;
+            border-radius: 10px;
         }
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #ffffff;
-            min-width: 220px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 0 0 12px 12px;
-            padding: 10px 0;
-            border: 1px solid #eee;
-        }
-
-        .dropdown-content a {
-            padding: 0.8rem 1.8rem !important;
-            text-transform: none !important;
-            letter-spacing: 0.5px !important;
-            font-size: 0.9rem !important;
-            color: var(--stellar-text) !important;
-            border-bottom: none !important;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f8f9fa !important;
-            color: var(--stellar-purple) !important;
-            padding-left: 2.2rem !important; /* Efecto de desplazamiento al hover */
-        }
-
-        .logout-item a {
-            color: #e74c3c !important;
-            border-left: 1px solid #eee;
-        }
-
-        .main-wrapper {
-            max-width: 1200px;
-            margin: 4rem auto;
-            padding: 0 20px;
-            animation: slideUp 0.8s ease;
+        /* --- CONTENIDO PRINCIPAL --- */
+        #main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 2.5rem;
+            transition: var(--transition);
         }
 
         .main-card {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+            min-height: 80vh;
             color: var(--stellar-text);
-            border-radius: 16px;
-            padding: 60px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
-            min-height: 60vh;
-            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        h2 {
-            color: var(--stellar-purple);
-            font-weight: 700;
-            font-size: 1.8rem;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 15px;
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        @media (max-width: 768px) {
-            #header-stellar { padding: 3rem 0 2rem 0; }
-            #header-stellar h1 { font-size: 2rem; letter-spacing: 0.3rem; }
-            
-            #main-nav ul li a {
-                padding: 1rem 0.8rem;
-                letter-spacing: 0.1rem;
-                font-size: 0.7rem;
+        /* --- RESPONSIVIDAD --- */
+        @media (max-width: 991.98px) {
+            #mobile-top-bar { display: flex; }
+            .sidebar-header { display: none; }
+            #sidebar {
+                transform: translateX(-100%);
+                border-radius: 0 30px 30px 0;
+                padding-top: 2rem;
             }
-
-            .main-card {
-                padding: 40px 20px;
-                border-radius: 12px;
+            #sidebar.active {
+                transform: translateX(0);
             }
-
-            .logout-item a { border-left: none; }
+            #main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+                padding-top: 6rem;
+            }
         }
     </style>
+    @stack('styles')
 </head>
 <body>
 
-    <header id="header-stellar">
-        <h1>SIDUMSS</h1>
-        <p>Sistema de Gestión</p>
-    </header>
+    <!-- BARRA SUPERIOR FLOTANTE (MÓVIL) -->
+    <div id="mobile-top-bar">
+        <h2 class="fw-bold">SIDUMSS</h2>
+        <button class="btn border-0" id="sidebarCollapse">
+            <i class="fas fa-bars fs-4 text-stellar-blue" style="color: var(--stellar-blue);"></i>
+        </button>
+    </div>
 
-    <nav id="main-nav">
-        <ul>
-            <li><a href="{{ route('admin.dashboard') }}">Inicio</a></li>
-            <li><a href="{{ route('admin.usuarios.index') }}">Usuarios</a></li>
-            <li><a href="{{ route('admin.viviendas.index') }}">Viviendas</a></li>
-            <li><a href="{{ route('admin.lecturas.index') }}">Lecturas</a></li>
-            <li class="nav-dropdown">
-                <a href="#">Reportes <i class="fas fa-chevron-down ms-1" style="font-size: 0.6rem;"></i></a>
-                <div class="dropdown-content">
-                    <a href="{{ route('admin.reportes.general') }}"> General</a>
-                    <a href="{{ route('admin.reportes.vivienda') }}"> Por Vivienda</a>
-                    <a href="{{ route('admin.reportes.morosidad') }}"> Morosidad</a>
-                </div>
-            </li>
-            <li><a href="{{ route('admin.tarifas.edit') }}">Tarifas</a></li>
-            <li class="logout-item">
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt me-1"></i> Salir
-                </a>
-            </li>
-        </ul>
+    <!-- SIDEBAR LATERAL -->
+    <nav id="sidebar">
+        <div class="sidebar-header d-none d-lg-block">
+            <h1>SIDUMSS</h1>
+            <p class="small text-muted text-uppercase tracking-wider">Administración</p>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-th-large"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.usuarios.index') }}" class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
+                        <i class="fas fa-users"></i> Usuarios
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.viviendas.index') }}" class="nav-link {{ request()->routeIs('admin.viviendas.*') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i> Viviendas
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.lecturas.index') }}" class="nav-link {{ request()->routeIs('admin.lecturas.*') ? 'active' : '' }}">
+                        <i class="fas fa-faucet"></i> Lecturas
+                    </a>
+                </li>
+
+                <!-- SECCIÓN NUEVA: IMÁGENES RECIBIDAS -->
+                <li>
+                    <a href="{{ route('admin.reportes.imagenes') }}" class="nav-link {{ request()->routeIs('admin.reportes.imagenes') ? 'active' : '' }}">
+                        <i class="fas fa-camera-retro"></i> Imágenes Recibidas
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#menuReportes">
+                        <i class="fas fa-chart-line"></i> Reportes
+                    </a>
+                    <div class="collapse {{ request()->routeIs('admin.reportes.*') ? 'show' : '' }}" id="menuReportes">
+                        <ul class="ms-3 list-unstyled">
+                            <li><a class="nav-link" href="{{ route('admin.reportes.general') }}" style="font-size: 0.75rem;">General</a></li>
+                            <li><a class="nav-link" href="{{ route('admin.reportes.vivienda') }}" style="font-size: 0.75rem;">Por Vivienda</a></li>
+                            <li><a class="nav-link" href="{{ route('admin.reportes.morosidad') }}" style="font-size: 0.75rem;">Morosidad</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="{{ route('admin.tarifas.edit') }}" class="nav-link {{ request()->routeIs('admin.tarifas.*') ? 'active' : '' }}">
+                        <i class="fas fa-sliders-h"></i> Tarifas
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="p-4 border-top mt-auto">
+            <a href="#" class="nav-link text-danger fw-bold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+        </div>
     </nav>
-    <main class="main-wrapper">
+
+    <!-- CONTENIDO -->
+    <main id="main-content">
         <div class="main-card">
             @yield('content')
         </div>
     </main>
 
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#sidebarCollapse').on('click', function() {
+                $('#sidebar').toggleClass('active');
+            });
+
+            $(document).on('click', function (e) {
+                if ($(window).width() < 992) {
+                    if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
+                        $('#sidebar').removeClass('active');
+                    }
+                }
+            });
+
+            $('.select2-stellar').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+        });
+    </script>
+    @stack('scripts')
 </body>
 </html>

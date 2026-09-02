@@ -5,178 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIDUMSS - Portal Propietario</title>
     
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Google Fonts: Source Sans Pro -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Bootstrap 5 y Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
     
     <style>
-        /* Estilo Base Stellar */
+        :root {
+            --stellar-grad: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
+            --stellar-blue: #0e5cad;
+            --stellar-text: #201f1f;
+            --stellar-muted: #807b7b;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         body {
-            background-color: #935d8c;
-            background-image: linear-gradient(45deg, #e37682 15%, #5f4d93 85%);
+            background-image: var(--stellar-grad);
             background-attachment: fixed;
+            background-size: cover;
             font-family: 'Source Sans Pro', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: white;
             min-height: 100vh;
+            margin: 0;
+            display: flex;
         }
 
-        /* HEADER PRINCIPAL */
-        #header-propietario {
+        /* --- BARRA MÓVIL (ISLA FLOTANTE) --- */
+        #mobile-top-bar {
+            display: none;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 0.6rem 1.5rem;
+            position: fixed;
+            top: 15px; left: 15px; right: 15px;
+            z-index: 1000; /* Menor que el sidebar */
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mobile-top-bar h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--stellar-blue);
+        }
+
+        /* --- SIDEBAR LATERAL --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95); /* Menos transparencia para que no se trasluzca lo de abajo */
+            backdrop-filter: blur(15px);
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 2000; /* Superior a la barra móvil */
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
+        }
+
+        /* Ocultar header del sidebar en móvil para evitar duplicidad */
+        .sidebar-header {
+            padding: 2.5rem 1.5rem;
             text-align: center;
-            padding: 3rem 0 2rem 0;
         }
-
-        #header-propietario h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-
-        #header-propietario p {
-            font-weight: 300;
-            opacity: 0.9;
+        
+        .sidebar-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--stellar-blue);
+            margin: 0;
             letter-spacing: 1px;
         }
 
-        /* NAVEGACIÓN SUPERIOR (Sticky) */
-        #nav-propietario {
-            background: rgba(255, 255, 255, 0.96);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 20px;
+        /* Nav links */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 0 1rem;
         }
-
-        #nav-propietario ul {
-            list-style: none;
+        .sidebar-nav .nav-link {
             display: flex;
-            margin: 0;
-            padding: 0;
             align-items: center;
-        }
-
-        #nav-propietario ul li a {
-            display: block;
-            padding: 1.3rem 1.5rem;
-            color: #636363;
-            text-decoration: none;
+            padding: 1rem 1.2rem;
+            color: var(--stellar-muted) !important;
             font-weight: 600;
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.3s;
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 5px;
+            transition: var(--transition);
+        }
+        .sidebar-nav .nav-link i { width: 25px; margin-right: 12px; font-size: 1.1rem; }
+
+        .sidebar-nav .nav-link:hover, 
+        .sidebar-nav .nav-link.active {
+            color: var(--stellar-blue) !important;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        #nav-propietario ul li a:hover {
-            color: #5f4d93;
-            background: rgba(95, 77, 147, 0.05);
+        /* Panel de Usuario */
+        .user-panel {
+            padding: 1.5rem;
+            background: rgba(14, 92, 173, 0.05);
+            margin: 1rem;
+            border-radius: 15px;
+            text-align: center;
         }
+        .user-panel span { display: block; color: var(--stellar-text); font-weight: 700; font-size: 0.9rem; }
+        .user-panel .role { font-size: 0.7rem; color: var(--stellar-blue); text-transform: uppercase; font-weight: 800; }
 
-        /* Info de Usuario en Nav */
-        .nav-user-info {
-            border-left: 1px solid #eee;
-            padding-left: 20px;
-            margin-left: 10px;
-            display: flex;
-            align-items: center;
-            color: #636363;
-        }
-
-        /* CONTENEDOR DE TARJETA BLANCA */
-        .main-wrapper {
-            max-width: 1200px;
-            margin: 3rem auto;
-            padding: 0 20px;
+        /* --- CONTENIDO --- */
+        #main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 2.5rem;
+            transition: var(--transition);
         }
 
         .main-card {
-            background: #ffffff;
-            color: #636363;
-            border-radius: 15px;
-            padding: 50px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-            min-height: 60vh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+            min-height: 85vh;
+            color: var(--stellar-text);
         }
 
-        /* Botón Cerrar Sesión Estilizado */
-        .btn-logout {
-            background: transparent;
-            border: 1px solid #e74c3c;
-            color: #e74c3c;
-            border-radius: 50px;
-            padding: 5px 15px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            transition: 0.3s;
-            margin-left: 15px;
-        }
-
-        .btn-logout:hover {
-            background: #e74c3c;
-            color: white;
-        }
-
-        /* Títulos de sección */
-        h2 {
-            color: #5f4d93;
-            font-weight: 700;
-            border-bottom: 2px solid #efefef;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
+        /* RESPONSIVIDAD */
+        @media (max-width: 991.98px) {
+            #mobile-top-bar { display: flex; }
+            
+            /* Quitamos el header del sidebar en móvil para que no choque con la barra flotante */
+            .sidebar-header { display: none; }
+            
+            #sidebar { 
+                transform: translateX(-100%); 
+                border-radius: 0 30px 30px 0; 
+                padding-top: 2rem; /* Espacio para que los items no empiecen tan arriba */
+            }
+            #sidebar.active { transform: translateX(0); }
+            
+            #main-content { 
+                margin-left: 0; 
+                width: 100%; 
+                padding: 1rem; 
+                padding-top: 6rem; /* Espacio para que el contenido no quede bajo la barra flotante */
+            }
+            .main-card { padding: 1.5rem; }
+            
+            /* El panel de usuario sí lo mostramos en móvil dentro del menú */
+            .user-panel { display: block !important; margin-top: 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. Encabezado -->
-    <header id="header-propietario">
-        <h1>SIDUMSS</h1>
-        <p>Urbanización Norte Plan "A" - Portal del Propietario</p>
-    </header>
+    <!-- BARRA FLOTANTE MÓVIL (Se mantiene siempre arriba) -->
+    <div id="mobile-top-bar">
+        <h2 class="fw-bold">SIDUMSS</h2>
+        <button class="btn border-0" id="sidebarCollapse">
+            <i class="fas fa-bars fs-4 text-stellar-blue"></i>
+        </button>
+    </div>
 
-    <!-- 2. Menú Superior -->
-    <nav id="nav-propietario">
-        <ul>
-            <li><a href="{{ route('propietario.dashboard') }}"><i class="fas fa-home me-2"></i> Inicio</a></li>
-            <li><a href="{{ route('propietario.avisos') }}"><i class="fas fa-file-invoice-dollar me-2"></i> Mis Avisos</a></li>
-            <li><a href="{{ route('propietario.reservas.index') }}"><i class="fas fa-calendar-alt me-2"></i> Reservas</a></li>
-        </ul>
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+        <!-- Este header solo se verá en Laptop -->
+        <div class="sidebar-header d-none d-lg-block">
+            <h1>SIDUMSS</h1>
+            <p class="small text-muted text-uppercase tracking-wider">Portal Propietario</p>
+        </div>
 
-        <!-- Información del Usuario a la derecha -->
-        <div class="nav-user-info d-none d-md-flex">
-            <span class="small fw-bold me-2">{{ Auth::user()->nombre }} {{ Auth::user()->apellido_paterno }}</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">Vecino</span>
-            
-            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                @csrf
-                <button type="submit" class="btn-logout">Salir</button>
-            </form>
+        <div class="user-panel">
+            <span class="role">Propietario</span>
+            <span>{{ Auth::user()->nombre }} {{ Auth::user()->apellido_paterno }}</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul class="list-unstyled">
+                <li>
+                    <a href="{{ route('propietario.dashboard') }}" class="nav-link {{ request()->routeIs('propietario.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('propietario.avisos') }}" class="nav-link {{ request()->routeIs('propietario.avisos') ? 'active' : '' }}">
+                        <i class="fas fa-file-invoice-dollar"></i> Mis Avisos
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('propietario.reservas.index') }}" class="nav-link {{ request()->routeIs('propietario.reservas.*') ? 'active' : '' }}">
+                        <i class="fas fa-calendar-alt"></i> Reservas
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="p-4 mt-auto border-top">
+            <a href="#" class="nav-link text-danger fw-bold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesion
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
         </div>
     </nav>
 
-    <!-- 3. Contenido Principal -->
-    <div class="main-wrapper">
+    <!-- CONTENIDO PRINCIPAL -->
+    <main id="main-content">
         <div class="main-card">
             @yield('content')
         </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-5 opacity-75">
-        <p>&copy; {{ date('Y') }} SIDUMSS Norte A. Gestión Residencial.</p>
-    </footer>
-
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#sidebarCollapse').on('click', function() {
+                $('#sidebar').toggleClass('active');
+            });
+
+            // Cerrar sidebar al hacer click fuera en móvil
+            $(document).on('click', function (e) {
+                if ($(window).width() < 992) {
+                    if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
+                        $('#sidebar').removeClass('active');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

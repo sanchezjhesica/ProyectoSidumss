@@ -5,182 +5,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIDUMSS - Panel Operador</title>
     
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Google Fonts: Source Sans Pro -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Bootstrap 5 y Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
     
     <style>
-        /* Estilo Base Stellar */
+        :root {
+            --stellar-grad: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
+            --stellar-blue: #0e5cad;
+            --stellar-text: #201f1f;
+            --stellar-muted: #807b7b;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         body {
-            background-color: #935d8c;
-            background-image: linear-gradient(45deg, #e37682 15%, #5f4d93 85%);
+            background-image: var(--stellar-grad);
             background-attachment: fixed;
+            background-size: cover;
             font-family: 'Source Sans Pro', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: white;
             min-height: 100vh;
-        }
-
-        /* HEADER */
-        #header-operador {
-            text-align: center;
-            padding: 3.5rem 0 2.5rem 0;
-        }
-
-        #header-operador h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-
-        #header-operador p {
-            font-weight: 300;
-            opacity: 0.9;
-            letter-spacing: 1px;
-            font-size: 1.1rem;
-        }
-
-        /* NAVEGACIÓN SUPERIOR (Sticky) */
-        #nav-operador {
-            background: rgba(255, 255, 255, 0.96);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        #nav-operador ul {
-            list-style: none;
-            display: flex;
             margin: 0;
-            padding: 0;
+            display: flex;
+        }
+
+        /* --- BARRA FLOTANTE MÓVIL (ESTILO ISLA) --- */
+        #mobile-top-bar {
+            display: none;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 0.6rem 1.5rem;
+            position: fixed;
+            top: 15px; left: 15px; right: 15px;
+            z-index: 1000;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            justify-content: space-between;
             align-items: center;
         }
 
-        #nav-operador ul li a {
-            display: block;
-            padding: 1.3rem 1.8rem;
-            color: #636363;
-            text-decoration: none;
+        #mobile-top-bar h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            color: var(--stellar-blue);
+        }
+
+        /* --- SIDEBAR OPERADOR --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 2000;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+        .sidebar-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--stellar-blue);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        /* Nav links */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 0 1rem;
+        }
+        .sidebar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: var(--stellar-muted) !important;
             font-weight: 600;
             font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: all 0.3s;
-        }
-
-        #nav-operador ul li a:hover {
-            color: #5f4d93;
-            background: rgba(95, 77, 147, 0.05);
-        }
-
-        /* Info de Usuario y Logout */
-        .nav-user-info {
-            border-left: 1px solid #eee;
-            padding-left: 25px;
-            margin-left: 15px;
-            display: flex;
-            align-items: center;
-            color: #636363;
-        }
-
-        .btn-logout-operador {
-            background: transparent;
-            border: 1px solid #e74c3c;
-            color: #e74c3c;
-            border-radius: 50px;
-            padding: 6px 18px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            transition: 0.3s;
-            margin-left: 20px;
+            letter-spacing: 1px;
             text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
+        .sidebar-nav .nav-link i { width: 30px; margin-right: 10px; font-size: 1.2rem; }
+
+        .sidebar-nav .nav-link:hover, 
+        .sidebar-nav .nav-link.active {
+            color: var(--stellar-blue) !important;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: translateX(5px);
         }
 
-        .btn-logout-operador:hover {
-            background: #e74c3c;
-            color: white;
+        /* Badge de Rol */
+        .user-panel {
+            padding: 1.2rem;
+            background: rgba(121, 241, 164, 0.15); /* Tono verde suave */
+            margin: 1rem;
+            border-radius: 15px;
+            text-align: center;
         }
+        .user-panel .role { font-size: 0.7rem; color: #157347; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .user-panel .name { display: block; color: var(--stellar-text); font-weight: 700; font-size: 0.9rem; }
 
-        /* CONTENEDOR DE TARJETA BLANCA */
-        .main-wrapper {
-            max-width: 1200px;
-            margin: 3.5rem auto;
-            padding: 0 25px;
+        /* --- CONTENIDO --- */
+        #main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 2.5rem;
+            transition: var(--transition);
         }
 
         .main-card {
-            background: #ffffff;
-            color: #636363;
-            border-radius: 15px;
-            padding: 55px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.25);
-            min-height: 60vh;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+            min-height: 85vh;
+            color: var(--stellar-text);
         }
 
-        /* Títulos de sección internos */
-        h2 {
-            color: #5f4d93;
-            font-weight: 700;
-            border-bottom: 2px solid #efefef;
-            padding-bottom: 15px;
-            margin-bottom: 35px;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 4rem 0;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
+        /* RESPONSIVIDAD */
+        @media (max-width: 991.98px) {
+            #mobile-top-bar { display: flex; }
+            .sidebar-header { display: none; }
+            #sidebar { transform: translateX(-100%); border-radius: 0 30px 30px 0; padding-top: 2rem; }
+            #sidebar.active { transform: translateX(0); }
+            #main-content { margin-left: 0; width: 100%; padding: 1rem; padding-top: 6rem; }
+            .main-card { padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. Header Hero -->
-    <header id="header-operador">
-        <h1>SIDUMSS</h1>
-        <p>Módulo de Registro para Operadores</p>
-    </header>
-
-<nav id="nav-operador">
-    <ul>
-        <li><a href="{{ route('operador.dashboard') }}"><i class="fas fa-chart-line me-2"></i> Inicio</a></li>
-        <li><a href="{{ route('operador.lecturas.crear') }}"><i class="fas fa-faucet me-2"></i> Registrar</a></li>
-        
-        <!-- Agregamos el cerrar sesión como un LI para que no falle el diseño -->
-        <li>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="color: #e74c3c;">
-                <i class="fas fa-sign-out-alt me-2"></i> SALIR
-            </a>
-        </li>
-    </ul>
-</nav>
-
-    <div class="main-wrapper">
-        <div class="main-card animate__animated animate__fadeIn">
-            @yield('content')
-        </div>
+    <!-- BARRA FLOTANTE MÓVIL -->
+    <div id="mobile-top-bar">
+        <h2 class="fw-bold">SIDUMSS</h2>
+        <button class="btn border-0" id="sidebarCollapse">
+            <i class="fas fa-bars fs-4 text-stellar-blue" style="color: var(--stellar-blue);"></i>
+        </button>
     </div>
 
-    <footer>
-        <p>&copy; {{ date('Y') }} Urbanización Sidumss Norte Plan "A"</p>
-    </footer>
+    <!-- SIDEBAR OPERADOR -->
+    <nav id="sidebar">
+        <div class="sidebar-header d-none d-lg-block">
+            <h1>SIDUMSS</h1>
+            <p class="small text-muted text-uppercase tracking-wider">Módulo Operador</p>
+        </div>
 
+        <div class="user-panel">
+            <span class="role"><i class="fas fa-hard-hat me-1"></i> Operador</span>
+            <span class="name">{{ Auth::user()->nombre }}</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul class="list-unstyled">
+                <li>
+                    <a href="{{ route('operador.dashboard') }}" class="nav-link {{ request()->routeIs('operador.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-chart-pie"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('operador.lecturas.crear') }}" class="nav-link {{ request()->routeIs('operador.lecturas.*') ? 'active' : '' }}">
+                        <i class="fas fa-faucet"></i> Registrar Lectura
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Botón Salir al Final -->
+        <div class="p-4 mt-auto border-top">
+            <a href="#" class="nav-link text-danger fw-bold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main id="main-content">
+        <div class="main-card">
+            @yield('content')
+        </div>
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Abrir Sidebar
+            $('#sidebarCollapse').on('click', function() {
+                $('#sidebar').toggleClass('active');
+            });
+
+            // Cerrar sidebar al hacer click fuera en móvil
+            $(document).on('click', function (e) {
+                if ($(window).width() < 992) {
+                    if (!$(e.target).closest('#sidebar, #sidebarCollapse').length) {
+                        $('#sidebar').removeClass('active');
+                    }
+                }
+            });
+        });
+    </script>
+    @stack('scripts')
 </body>
 </html>
