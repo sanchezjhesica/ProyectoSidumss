@@ -1,0 +1,14 @@
+Ahora quiero refactorizar SidumssNorteA aplicando una estructura más profesional.
+Actualmente todo está dividido en carpetas para tres tipos: Administrador, propietario y operador
+Requisitos:
+- quiero que este mejor organizado y entendible
+- conserva todas las funcionalidades actuales;
+- HTML debe contener principalmente estructura;
+- si se puede me gustaria que los estilos esten en una carpeta si es que se puede si no manten los estilos como estan;
+- utiliza nombres claros para funciones y añade comentarios que hace cada funcion;
+- elimina código duplicado si existe;
+- agrega comentarios solamente donde aporten valor;
+- evita comentarios obvios;
+- no utilices frameworks;
+- la aplicación debe continuar funcionando totalmente.
+-solo usa los lenguajes que están en el proyecto que son php, js, y elocuent estamos usando Modelo Vista y Controlador 

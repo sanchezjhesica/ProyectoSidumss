@@ -15,8 +15,8 @@
     <style>
         /* Estilo Base Stellar */
         body {
-            background-color: #935d8c;
-            background-image: linear-gradient(45deg, #e37682 15%, #5f4d93 85%);
+            background-color: #728156;
+            background-image: linear-gradient(45deg, #79f1a4 15%, #0e5cad 85%);
             background-attachment: fixed;
             font-family: 'Source Sans Pro', sans-serif;
             height: 100vh;
@@ -36,32 +36,14 @@
 
         /* La Tarjeta Blanca */
         .login-card {
-            background: #ffffff;
+            background: #ffffff9a;
             border-radius: 15px;
             padding: 50px 40px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
             border: none;
         }
-
-        /* Logo Circular Estilo Stellar */
-        .logo-box {
-            width: 80px;
-            height: 80px;
-            background: #ffffff;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: -40px; /* Lo posiciona sobre la tarjeta */
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            color: #5f4d93;
-            font-size: 2rem;
-        }
-
         h2 {
-            color: #5f4d93;
+            color: #201f1f;
             font-weight: 700;
             letter-spacing: 2px;
             margin-top: 20px;
@@ -71,7 +53,7 @@
 
         /* Estilo de Inputs */
         .form-label {
-            color: #888;
+            color: #807b7b;
             font-weight: 600;
             font-size: 0.85rem;
             text-transform: uppercase;
@@ -82,10 +64,10 @@
         }
 
         .form-control {
-            border: 1px solid #eee;
+            border: 1px solid #eeeeee94;
             border-radius: 8px;
             padding: 12px 15px;
-            background: #fdfdfd;
+            background: #fdfdfdab;
             transition: all 0.3s ease;
         }
 
@@ -97,7 +79,7 @@
 
         /* Botón Stellar con Degradado */
         .btn-stellar {
-            background: linear-gradient(45deg, #5f4d93 0%, #e37682 100%);
+            background: linear-gradient(45deg, #22349e 0%, #8183e6 100%);
             border: none;
             color: white;
             padding: 14px;
@@ -128,7 +110,7 @@
 
         .footer-text {
             margin-top: 30px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(32, 31, 31, 0.8);
             font-size: 0.9rem;
             letter-spacing: 1px;
         }
@@ -137,14 +119,11 @@
 <body>
 
     <div class="login-wrapper">
-        <!-- Logo Icon -->
-        <div class="logo-box">
-            <i class="fa-solid fa-water"></i>
-        </div>
+   
 
         <!-- Tarjeta de Login -->
         <div class="login-card card">
-            <h2>SIDUMSS</h2>
+            <h2>SIDUMSS NORTE A</h2>
             
             <form action="{{ route('login.post') }}" method="POST">
                 @csrf
