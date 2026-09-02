@@ -16,14 +16,50 @@ class Vivienda extends Model
         'calle', 
         'tipo_vivienda', 
         'nro_medidor', 
-        'estado_vivienda'
+        'estado_vivienda', // Mantenlo si lo usas para borrado lógico
+        'id_propietario'
     ];
-    public function propietarios()
+
+    // Relación con el Propietario (Uno a Muchos: una vivienda tiene un dueño)
+    public function propietario()
     {
-        return $this->belongsToMany(User::class, 'propietario_vivienda', 'id_vivienda', 'id_usuario');
+        return $this->belongsTo(User::class, 'id_propietario', 'id_usuario');
     }
-    public function cobros()
+
+    // --- NUEVAS RELACIONES (Divididas por tipo de cobro) ---
+
+    /**
+     * Relación con los cobros de agua.
+     * Permite hacer: $vivienda->cobrosAgua
+     */
+    public function cobrosAgua()
     {
-        return $this->hasMany(Cobro::class, 'id_vivienda', 'id_vivienda');
+        return $this->hasMany(CobroAgua::class, 'id_vivienda', 'id_vivienda');
+    }
+
+    /**
+     * Relación con los cobros de mantenimiento.
+     * Permite hacer: $vivienda->cobrosMantenimiento
+     */
+    public function cobrosMantenimiento()
+    {
+        return $this->hasMany(CobroMantenimiento::class, 'id_vivienda', 'id_vivienda');
+    }
+
+    /**
+     * Relación con los cobros de remesas (expensas).
+     * Permite hacer: $vivienda->cobrosRemesas
+     */
+    public function cobrosRemesas()
+    {
+        return $this->hasMany(CobroRemesa::class, 'id_vivienda', 'id_vivienda');
+    }
+
+    /**
+     * Relación con las lecturas de agua.
+     */
+    public function lecturas()
+    {
+        return $this->hasMany(Lectura::class, 'id_vivienda', 'id_vivienda');
     }
 }

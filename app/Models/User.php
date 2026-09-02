@@ -37,9 +37,11 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
     public function viviendas()
-    {
-        return $this->belongsToMany(Vivienda::class, 'propietario_vivienda', 'id_usuario', 'id_vivienda');
-    }
+{
+    // Ahora es una relación de Uno a Muchos (hasMany)
+    // Un usuario tiene muchas viviendas asignadas directamente por su ID
+    return $this->hasMany(Vivienda::class, 'id_propietario', 'id_usuario');
+}
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'id_rol', 'id_rol');

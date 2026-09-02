@@ -8,29 +8,36 @@ class Lectura extends Model
 {
     protected $table = 'lecturas';
     protected $primaryKey = 'id_lectura';
-    public $timestamps = false;
+    public $timestamps = false; // La base de datos usa fecha_registro por defecto
 
     protected $fillable = [
         'id_vivienda', 
-        'fecha_lectura', 
+        'id_operador',
+        'periodo_mes',    
+        'periodo_anio',   
         'lectura_anterior', 
-        'lectura_actual', 
-        'id_operador'
+        'lectura_actual',
+        'consumo_m3',      // <--- AGREGA ESTO AQUÍ
     ];
 
+    // Relación con la Vivienda
     public function vivienda()
     {
         return $this->belongsTo(Vivienda::class, 'id_vivienda', 'id_vivienda');
     }
 
+    // Relación con el Operador (Usuario)
     public function operador()
     {
         return $this->belongsTo(User::class, 'id_operador', 'id_usuario');
     }
-public function cobro()
-{
-    return $this->hasOne(Cobro::class, 'id_vivienda', 'id_vivienda')
-                ->whereMonth('fecha_emision', \Carbon\Carbon::parse($this->fecha_lectura)->month)
-                ->whereYear('fecha_emision', \Carbon\Carbon::parse($this->fecha_lectura)->year);
-}
+
+    /**
+     * Relación con el Cobro de Agua.
+     * En la nueva BD, una lectura genera específicamente un cobro de agua.
+     */
+    public function cobroAgua()
+    {
+        return $this->hasOne(CobroAgua::class, 'id_lectura', 'id_lectura');
+    }
 }

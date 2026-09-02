@@ -8,6 +8,14 @@ class Egreso extends Model
 {
     protected $table = 'egresos';
     protected $primaryKey = 'id_egreso';
-    public $timestamps = false;
-    protected $fillable = ['descripcion', 'monto', 'categoria', 'fecha_pago'];
+    public $timestamps = false; // La BD usa la fecha manual o created_at
+
+    protected $fillable = [
+        'descripcion', 
+        'monto', 
+        'categoria', 
+        'fecha_egreso', 
+        'comprobante_nro', 
+        'id_admin'
+    ];
 }
